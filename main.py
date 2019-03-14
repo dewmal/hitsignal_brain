@@ -1,13 +1,14 @@
 from mode import Service
 
 import settings
+from app.meth_one.method import MethodOne
 from application import stapp
 
 
 class MainAppService(Service):
 
     def on_init_dependencies(self):
-        return [stapp]
+        return [stapp, MethodOne()]
 
     async def on_start(self) -> None:
         print('APP STARTING')
@@ -25,4 +26,5 @@ class MainAppService(Service):
 if __name__ == '__main__':
     from mode import Worker
 
-    Worker(MainAppService(), loglevel="info").execute_from_commandline()
+    Worker(MainAppService(), loglevel="info",
+           daemon=True).execute_from_commandline()
