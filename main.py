@@ -1,9 +1,14 @@
 from mode import Service
 
 import settings
+from application import stapp
 
 
 class MainAppService(Service):
+
+    def on_init_dependencies(self):
+        return [stapp]
+
     async def on_start(self) -> None:
         print('APP STARTING')
         import pydot

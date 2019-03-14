@@ -2,6 +2,7 @@
 data/
 !data/empty
 venv/
+hitsignal_stream_app-data/
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
