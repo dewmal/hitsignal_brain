@@ -10,6 +10,7 @@ from application import stapp, web_app
 
 
 class Webserver(ServiceThread):
+    import app.web
 
     def __init__(self,
                  port: int = 8000,
