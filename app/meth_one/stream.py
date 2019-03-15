@@ -6,6 +6,7 @@ from application import stapp
 
 class FxStreamMessage(faust.Record, isodates=True):
     message: str
+    type: str
 
 
 class Candle(faust.Record, isodates=True):

@@ -19,8 +19,7 @@ async def count_page_views(views):
 async def live_stream_fx_data(messages):
     async for fx_msg in messages:
         tick = await process_message(fx_msg.message)
-        res = await m_sio.emit('original_data',
+        await m_sio.emit('original_data',
                                {'data': [tick['ask'], tick['bid'], tick['quote']], 'time': tick['timestamp']},
                                namespace='/trading'
                                )
-        print(res)

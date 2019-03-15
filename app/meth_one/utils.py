@@ -9,34 +9,41 @@ from app.meth_one.stream import Candle
 
 async def read_from_ws_live(pair_name, callback, count=10):
     api_url = "wss://ws.binaryws.com/websockets/v3?app_id=1089"
-
-    async with websockets.connect(
-            api_url) as ws:
-        print(f"Web socket start on {pair_name} - {ws}")
-        json_data = json.dumps({'ticks': f'frx{pair_name}'})
-        await ws.send(json_data)
-        async for message in ws:
-            await callback(message)
+    try:
+        async with websockets.connect(
+                api_url) as ws:
+            print(f"Web socket start on {pair_name} - {ws}")
+            json_data = json.dumps({'ticks': f'frx{pair_name}'})
+            await ws.send(json_data)
+            async for message in ws:
+                await callback(message)
+    except Exception as e:
+        ex, val, tb = sys.exc_info()
+        traceback.print_exception(ex, val, tb)
 
 
 async def read_from_ws_history(pair_name, callback, count=10):
     api_url = "wss://ws.binaryws.com/websockets/v3?app_id=1089"
+    try:
+        async with websockets.connect(
+                api_url) as ws:
+            print(f"Web socket start on {pair_name} - {ws}")
+            json_data = json.dumps({
+                "ticks_history": f"frx{pair_name}",
+                "end": "latest",
+                "start": 1,
+                "style": "candles",
+                "adjust_start_time": 1,
+                "subscribe": 1,
+                "count": count
+            })
+            await ws.send(json_data)
+            async for message in ws:
+                await callback(message)
 
-    async with websockets.connect(
-            api_url) as ws:
-        print(f"Web socket start on {pair_name} - {ws}")
-        json_data = json.dumps({
-            "ticks_history": f"frx{pair_name}",
-            "end": "latest",
-            "start": 1,
-            "style": "candles",
-            "adjust_start_time": 1,
-            "subscribe": 1,
-            "count": count
-        })
-        await ws.send(json_data)
-        async for message in ws:
-            await callback(message)
+    except Exception as e:
+        ex, val, tb = sys.exc_info()
+        traceback.print_exception(ex, val, tb)
 
 
 async def process_message(message, return_type=None, call_back=None):
