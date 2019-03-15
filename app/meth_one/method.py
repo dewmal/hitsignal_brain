@@ -39,20 +39,6 @@ class MethodOne(ServiceThread):
 
         await read_from_ws_history("EURUSD", result_reader)
 
-    # @Service.task
-    # async def web_steam_data_eur_gbp(self):
-    #     async def result_reader(message):
-    #         await fx_message_stream_topic.send(value=FxStreamMessage(message=message, type="CANDLE"))
-    #
-    #     await read_from_ws_history("EURGBP", result_reader)
-    #
-    # @Service.task
-    # async def web_steam_data_eur_chf(self):
-    #     async def result_reader(message):
-    #         await fx_message_stream_topic.send(value=FxStreamMessage(message=message, type="CANDLE"))
-    #
-    #     await read_from_ws_history("EURCHF", result_reader)
-
 
 async def call_after_process_candle_live_feed(candle):
     await fx_candle_stream.send(value=candle)
@@ -62,21 +48,6 @@ async def call_after_process_candle_live_feed(candle):
 async def candle_stream_fx(stream):
     print(f"Stream -  {stream}")
     await fx_candle_1min_stream.send(value=stream)
-
-
-# @stapp.agent(fx_candle_stream)
-# async def fx_candle_stream_(stream):
-#     last_candle_ = 0
-#     tmp_last_candle = None
-#     async for candle in stream:
-#         candle: Candle = candle
-#         print(f"{candle.epoch} , {candle.open_time} , {candle.open} {candle.close}")
-#
-#         if last_candle_ < candle.open_time:
-#             print("new candle found")
-#             await fx_candle_1min_stream.send(value=tmp_last_candle)
-#             last_candle_ = candle.open_time
-#         tmp_last_candle = candle
 
 
 @stapp.agent(fx_message_stream_topic_eur_usd)
@@ -93,7 +64,6 @@ async def live_stream_fx_data(messages):
                          {'data': [tick['ask'], tick['bid'], tick['quote']], 'time': tick['timestamp']},
                          namespace='/trading'
                          )
-
 
 @stapp.agent(fx_price_prediction_stream)
 async def fx_price_prediction_stream_broad_cast(predictions):
