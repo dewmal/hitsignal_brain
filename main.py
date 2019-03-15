@@ -57,7 +57,7 @@ class Webserver(ServiceThread):
 class MainAppService(Service):
 
     def on_init_dependencies(self):
-        return [Webserver(), stapp, MethodOne()]
+        return [stapp, MethodOne()]
 
     async def on_start(self) -> None:
         print('APP STARTING')
@@ -75,5 +75,5 @@ class MainAppService(Service):
 if __name__ == '__main__':
     from mode import Worker
 
-    Worker(MainAppService(), loglevel="info",
+    Worker(MainAppService(), Webserver(), loglevel="info",
            daemon=True).execute_from_commandline()
