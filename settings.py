@@ -21,3 +21,6 @@ FAUST_BROKER = "kafka://localhost:9092"
 
 # Sanic Web App
 WEB_APP_STATIC_FOLDER = f'{base_path}/ui/static'
+
+# Kombu Settings
+KOMBU_SOCKET_IO_MESSAGE_BROKER = "redis://localhost:6379/"
