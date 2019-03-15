@@ -4,6 +4,8 @@ import traceback
 
 import websockets
 
+from app.meth_one.stream import Candle
+
 
 async def read_from_ws_live(pair_name, callback, count=10):
     api_url = "wss://ws.binaryws.com/websockets/v3?app_id=1089"
@@ -37,9 +39,8 @@ async def read_from_ws_history(pair_name, callback, count=10):
             await callback(message)
 
 
-async def process_message(message):
+async def process_message(message, return_type=None, call_back=None):
     fact = json.loads(message)
-    # print(message)
     message_type = fact['msg_type']
 
     if 'error' in fact and fact['error']['code'] == 'AuthorizationRequired':
@@ -56,12 +57,13 @@ async def process_message(message):
             # data = np.array((ask, bid, quote))
             # print(pair_name,date,data)
             # await context.publish(index=date, data=data)
-            return {
-                "ask": ask,
-                "bid": bid,
-                "quote": quote,
-                "timestamp": date
-            }
+            if return_type is None:
+                return {
+                    "ask": ask,
+                    "bid": bid,
+                    "quote": quote,
+                    "timestamp": date
+                }
 
         elif message_type == 'proposal':
             # self.buy_contact(ws, fact)
@@ -76,15 +78,45 @@ async def process_message(message):
         elif message_type == 'sell':
             # self.account_balance = float(fact['sell']['balance_after'])
             pass
+        elif message_type == 'ohlc':
+            candle = fact['ohlc']
+
+            candle_obj = Candle(
+                open_time=float(candle['open_time']),
+                epoch=float(candle['epoch']),
+                open=float(candle['open']),
+                low=float(candle['low']),
+                high=float(candle['high']),
+                close=float(candle['close'], ),
+                symbol=candle['symbol'],
+            )
+            if return_type is None or return_type is type(candle_obj):
+                if call_back is None:
+                    return candle_obj
+                else:
+                    await call_back(candle_obj)
         elif message_type == 'candles':
-            print(fact)
+
+            data = {
+                'type': '<Time>OHLC',
+                'df': [],
+                'current': {}
+            }
+
             for candle in fact['candles']:
-                print(candle)
+                data['df'].append(
+                    [float(candle['epoch']), float(candle['open']), float(candle['high']), float(candle['low']),
+                     float(candle['close'])])
+            data['current'] = data['df'][-1]
+            # print(data)
             # self.account_balance = float(fact['sell']['balance_after'])
-            pass
+            if return_type is None or return_type is type(data):
+                return data
         else:
             # logging.info(fact)
             pass
+
+
 
     except Exception as e:
         ex, val, tb = sys.exc_info()

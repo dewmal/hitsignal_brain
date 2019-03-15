@@ -75,5 +75,8 @@ class MainAppService(Service):
 if __name__ == '__main__':
     from mode import Worker
 
-    Worker(MainAppService(), Webserver(), loglevel="info",
-           daemon=True).execute_from_commandline()
+    Worker(
+        MainAppService(),
+        Webserver(),
+        loglevel='INFO',
+        daemon=True).execute_from_commandline()
