@@ -9,3 +9,4 @@ class FxStreamMessage(faust.Record, isodates=True):
 
 
 fx_message_stream_topic = stapp.topic('fx_message_stream', value_type=FxStreamMessage)
+fx_message_live_stream_topic = stapp.topic('fx_message_live_stream', value_type=FxStreamMessage)
