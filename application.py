@@ -1,3 +1,4 @@
+## Create Faust App here
 import faust
 
 import settings
@@ -6,11 +7,12 @@ stapp = faust.App(
     f'{settings.FAUST_APP_NAME}',
     broker=settings.FAUST_BROKER
 )
+'''
+Async io socketio
+'''
+import socketio
+from sanic import Sanic
 
-
-class PageView(faust.Record):
-    id: str
-    user: str
-
-
-page_view_topic = stapp.topic('page_views_2', value_type=PageView)
+sio = socketio.AsyncServer(async_mode='sanic')
+web_app = Sanic()
+sio.attach(web_app)

@@ -2,3 +2,5 @@ mode
 faust
 websockets
 pydot
+python-socketio
+sanic
