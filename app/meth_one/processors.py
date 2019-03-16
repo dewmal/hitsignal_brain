@@ -11,8 +11,8 @@ async def fx_candle_(stream):
     async for candle in stream:
         candle: Candle = candle
         prediction = PricePrediction(
-            time=(datetime.datetime.fromtimestamp(candle.epoch) + datetime.timedelta(seconds=30)).timestamp(),
-            price=candle.close * (101) / 100,
+            time=(datetime.datetime.fromtimestamp(candle.epoch) + datetime.timedelta(seconds=120)).timestamp(),
+            price=candle.close * (100.0005) / 100,
             symbol=candle.symbol,
             price_change=candle.high / candle.open,
             originator="random",
