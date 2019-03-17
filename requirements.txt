@@ -7,3 +7,9 @@ sanic
 kombu
 redis
 aioredis
+dask[complete]
+pyti
+sympy
+matplotlib
+torch
+torchvision

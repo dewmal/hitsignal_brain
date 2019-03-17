@@ -12,6 +12,10 @@ from utils.stream_helper import stream_last_
 m_sio = socketio.AsyncRedisManager(settings.SOCKET_IO_MESSAGE_BROKER, write_only=True)
 
 
+EURUSD = "R_50"
+
+
+
 class MethodOne(ServiceThread):
 
     async def on_start(self) -> None:
@@ -22,21 +26,21 @@ class MethodOne(ServiceThread):
         async def result_reader(message):
             await fx_message_live_stream_topic.send(value=FxStreamMessage(message=message, type="TICK"))
 
-        await read_from_ws_live("EURUSD", result_reader)
+        await read_from_ws_live(EURUSD, result_reader)
 
     @Service.task
     async def web_steam_data_eur_usd(self):
         async def result_reader(message):
             await fx_message_stream_topic_eur_usd.send(value=FxStreamMessage(message=message, type="CANDLE"))
 
-        await read_from_ws_history("EURUSD", result_reader, count=30)
+        await read_from_ws_history(EURUSD, result_reader, count=30)
 
     @Service.task
     async def web_steam_data_eur_jpy(self):
         async def result_reader(message):
             await fx_message_stream_topic_eur_usd.send(value=FxStreamMessage(message=message, type="CANDLE"))
 
-        await read_from_ws_history("EURUSD", result_reader)
+        await read_from_ws_history(EURUSD, result_reader)
 
 
 async def call_after_process_candle_live_feed(candle):
