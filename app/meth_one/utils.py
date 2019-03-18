@@ -110,11 +110,27 @@ async def process_message(message, return_type=None, call_back=None):
                 'current': {}
             }
 
+            # print(fact)
+
             for candle in fact['candles']:
-                data['df'].append(
-                    [float(candle['epoch']), float(candle['open']), float(candle['high']), float(candle['low']),
-                     float(candle['close'])])
-            data['current'] = data['df'][-1]
+                # print(candle)
+                candle_obj = Candle(
+                    open_time=float(candle['epoch']),
+                    epoch=float(candle['epoch']),
+                    open=float(candle['open']),
+                    low=float(candle['low']),
+                    high=float(candle['high']),
+                    close=float(candle['close'], ),
+                    symbol=fact['echo_req']['ticks_history'],
+                )
+
+                if return_type is None or return_type is type(candle_obj):
+                    if call_back is None:
+                        return candle_obj
+                    else:
+                        await call_back(candle_obj)
+
+            # data['current'] = data['df'][-1]
             # print(data)
             # self.account_balance = float(fact['sell']['balance_after'])
             if return_type is None or return_type is type(data):
