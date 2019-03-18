@@ -58,11 +58,11 @@ class StrategyModel(nn.Module):
         self.l1 = nn.Linear(self.n_outputs * 10, self.n_outputs)
 
     def forward(self, inputs):
-        print(inputs.shape)
+        # print(inputs.shape)
         price = inputs[:, :, 0:1]
         sma_input = inputs[:, :, 1:4]
         mcad_input = inputs[:, :, 4:]
-        print(inputs.shape, price.shape, sma_input.shape, mcad_input.shape)
+        # print(inputs.shape, price.shape, sma_input.shape, mcad_input.shape)
         # print(inputs, price, sma_input, mcad_input)
 
         # print(sma_input.shape, mcad_input.shape)
@@ -79,11 +79,14 @@ class StrategyModel(nn.Module):
         return x
 
 
-def build_model(device, settings, model_path=None):
+def build_model(device, settings):
     model = StrategyModel(settings.BATCH_SIZE, settings.N_STEPS, 1, 3, 2, settings.N_NEURONS,
-                          settings.N_OUTPUTS, device=device).to(device)
+                          settings.N_OUTPUTS, device=device)
 
-    if model_path is not None:
-        model.load_state_dict(torch.load(model_path))
+    if settings.model_path is not None:
+        model = torch.load(settings.model_path)
 
+        # print(chkpt)
+        # model.load_state_dict()
+    model = model.to(device)
     return model

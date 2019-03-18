@@ -72,17 +72,4 @@ def predict(df, window_size=None, consider_value=None, prediction_step=None, alg
     values = df.values
     values = np.reshape(values, (1, values.shape[0], values.shape[1]))
     pred_values = predict_model(torch.from_numpy(values).float().to(device))
-    print(pred_values)
-    # predict_mo
-
-    # print("----")
-    # print(df.tail())
-    # print("----")
-    # predic_dt_set = XYDataSet(data_frame, window_size=window_size, train=False)
-    # print(f"data frame size {len(predic_dt_set)} ")
-    # print(f"{predic_dt_set.__getitem__(0)}")
-    # print(f"{predic_dt_set.__getitem__(len(predic_dt_set))}")
-
-    # for idx, data in enumerate(predic_dt_set):
-    #     # print(idx, data.shape)
-    #     pass
+    return pred_values.cpu().detach().numpy(), df.index.values[-1] + prediction_step * 60

@@ -11,3 +11,4 @@ N_EPHOCS = 100
 VALIDATION_SIZE = 0.2
 LOG_X = False
 consider_value = 'close'
+model_path = '/home/dewmal/WorkingProjects/CeylonAPPS/brain/hitsignal_brain/models/meht_one_algo_one/model_1_mymodel_60.pth'
