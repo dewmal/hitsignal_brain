@@ -1,6 +1,8 @@
 .idea/*
 data/
+log/
 !data/empty
+!log/empty
 venv/
 hitsignal_stream_app-data/
 

@@ -13,3 +13,8 @@ sympy
 matplotlib
 torch
 torchvision
+pytorch-ignite
+tqdm
+tensorboardX
+tensorboard
+tensorflow

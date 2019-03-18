@@ -8,6 +8,8 @@ base_path = dirname + ""
 
 # tmp
 TEMP_FOLDER = f"{base_path}/tmp"
+# Log
+LOG_FOLDER = f"{base_path}/log"
 
 # models
 MODEL_FOLDER = f"{base_path}/models"
