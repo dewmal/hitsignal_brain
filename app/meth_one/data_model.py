@@ -11,7 +11,8 @@ class XYDataSet(Dataset):
         data_window = self.df.iloc[idx:idx + self.window_size, :6]  # At idx data window
 
         if self.train:
-            result_data_window = self.df.iloc[idx + self.window_size, 6:]  # Ai idx prediction must be
+            result_data_window = self.df.iloc[idx + self.window_size, 6:7]  # Ai idx prediction must be
+            # print(result_data_window.shape)
             return data_window.values, result_data_window.values
         else:
             return data_window.values

@@ -60,9 +60,9 @@ _dataset_val = XYDataSet(data_frame.iloc[train_size:], meth_settings.window_size
 val_data_loader = DataLoader(_dataset_val, batch_size=meth_settings.BATCH_SIZE)
 
 # Create Model
-train_model = build_model(device,meth_settings)
+train_model = build_model(device, meth_settings, load_from_file=False)
 criterion = nn.MSELoss()
-optimizer = optim.RMSprop(train_model.parameters(), lr=0.01, momentum=0.01)
+optimizer = optim.Adam(train_model.parameters(), lr=0.001)
 
 if meth_settings.LOG_X:
     def create_summary_writer(model, data_loader, log_dir):

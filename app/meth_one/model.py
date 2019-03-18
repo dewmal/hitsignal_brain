@@ -1,6 +1,7 @@
 # Model your
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 
 class LSTMPredictModel(nn.Module):
@@ -37,6 +38,53 @@ class LSTMPredictModel(nn.Module):
         return out, lstm_out, self.hidden
 
 
+class CNNForDetect(nn.Module):
+
+    def __init__(self, in_channels, out_channels, window_size):
+        super(CNNForDetect, self).__init__()
+        self.in_channels = in_channels
+        self.window_size = window_size
+        self.out_channels = out_channels
+        self.conv1 = nn.Conv1d(in_channels, out_channels, kernel_size=3, stride=1, padding=1)
+        self.pool = torch.nn.MaxPool1d(kernel_size=2, stride=2, padding=0)
+
+        # 4608 input features, 64 output features (see sizing flow below)
+        self.fc1 = torch.nn.Linear(window_size * out_channels // 2, window_size)
+
+        # 64 input features, 10 output features for our 10 defined classes
+
+        self.fc2 = torch.nn.Linear(window_size, out_channels)
+
+    def forward(self, x):
+        # print("-----")
+        # Computes the activation of the first convolution
+        # Size changes from (3, 32, 32) to (18, 32, 32)
+        # print(x.shape)
+        x = F.relu(self.conv1(x))
+        # print(x.shape)
+        # Size changes from (18, 32, 32) to (18, 16, 16)
+        x = self.pool(x)
+        # print(x.shape)
+        # Reshape data to input to the input layer of the neural net
+        # Size changes from (18, 16, 16) to (1, 4608)
+        # Recall that the -1 infers this dimension from the other given dimension
+
+        x = torch.reshape(x, (x.shape[0], self.out_channels // 2, self.window_size))
+        x = x.view(-1, x.shape[2] * x.shape[1])
+        # print(x.shape)
+
+        # Computes the activation of the first fully connected layer
+        # Size changes from (1, 4608) to (1, 64)
+        x = F.relu(self.fc1(x))
+        # print(x.shape)
+        # Computes the second fully connected layer (activation applied later)
+        # Size changes from (1, 64) to (1, 10)
+        x = self.fc2(x)
+        # print("-----")
+        # print(x.shape)
+        return (x)
+
+
 class StrategyModel(nn.Module):
 
     def __init__(self, batch_size, n_steps, price_n_inputs, sma_n_inputs, mcad_n_inputs, n_neurons, n_outputs,
@@ -55,6 +103,12 @@ class StrategyModel(nn.Module):
         self.price_rnn = LSTMPredictModel(batch_size, n_steps, price_n_inputs, n_neurons, n_outputs * 10, device=device)
         self.sma_rnn = LSTMPredictModel(batch_size, n_steps, sma_n_inputs, n_neurons, n_outputs * 10, device=device)
         self.mcad_rnn = LSTMPredictModel(batch_size, n_steps, mcad_n_inputs, n_neurons, n_outputs * 10, device=device)
+
+        self.price_cnn = CNNForDetect(price_n_inputs, n_outputs * 10, window_size=n_steps)
+        self.sma_cnn = CNNForDetect(sma_n_inputs, n_outputs * 10, window_size=n_steps)
+        self.mcad_cnn = CNNForDetect(mcad_n_inputs, n_outputs * 10, window_size=n_steps)
+
+        self.l_price_sma = nn.Linear(self.n_outputs * 10, self.n_outputs)
         self.l1 = nn.Linear(self.n_outputs * 10, self.n_outputs)
 
     def forward(self, inputs):
@@ -62,28 +116,41 @@ class StrategyModel(nn.Module):
         price = inputs[:, :, 0:1]
         sma_input = inputs[:, :, 1:4]
         mcad_input = inputs[:, :, 4:]
-        # print(inputs.shape, price.shape, sma_input.shape, mcad_input.shape)
-        # print(inputs, price, sma_input, mcad_input)
 
-        # print(sma_input.shape, mcad_input.shape)
-        # print(sma_input,mcad_input)
+        # CNN Output
+        x_price_cnn = self.price_cnn(
+            torch.reshape(price, (price.shape[0], price.shape[2], price.shape[1])))
+        x_sma_cnn = self.sma_cnn(torch.reshape(sma_input, (sma_input.shape[0], sma_input.shape[2], sma_input.shape[1])))
+        x_mcad_cnn = self.mcad_cnn(
+            torch.reshape(mcad_input, (mcad_input.shape[0], mcad_input.shape[2], mcad_input.shape[1])))
+
+        # LSTM Output
         x_price, _x_price_lstm, _ = self.price_rnn(price)
         x_sma, _x_sma_lstm, _ = self.sma_rnn(sma_input)
         x_mcad, _x_mcad_lstm, _ = self.mcad_rnn(mcad_input)
-        # print(_x_price_lstm.shape, _x_sma_lstm.shape, _x_mcad_lstm.shape)
 
-        x = (x_sma + x_mcad + x_price) / 3
-        x = torch.tanh(x)
-        # x = torch.sigmoid(x)
-        x = self.l1(x)
+        price_x = torch.add(x_price_cnn, 1, x_price)
+        sma_x = torch.add(x_price_cnn, 1, x_price)
+        mcad_x = torch.add(x_price_cnn, 1, x_price)
+
+        sma_x = torch.addcmul(sma_x, 0.5, mcad_x, sma_x)
+
+        x = price_x + sma_x
+
+        price_x = self.l_price_sma(x)
+
+        x = torch.add(price_x, 0.01, mcad_x)
+
+        x = torch.sigmoid(self.l1((x)))
+        # print(x.shape)
         return x
 
 
-def build_model(device, settings):
+def build_model(device, settings, load_from_file=True):
     model = StrategyModel(settings.BATCH_SIZE, settings.N_STEPS, 1, 3, 2, settings.N_NEURONS,
                           settings.N_OUTPUTS, device=device)
 
-    if settings.model_path is not None:
+    if settings.model_path is not None and load_from_file:
         model = torch.load(settings.model_path)
 
         # print(chkpt)
