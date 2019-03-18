@@ -1,5 +1,6 @@
 import json
 import sys
+import time
 import traceback
 
 import websockets
@@ -22,7 +23,7 @@ async def read_from_ws_live(pair_name, callback, count=10):
         traceback.print_exception(ex, val, tb)
 
 
-async def read_from_ws_history(pair_name, callback, count=10):
+async def read_from_ws_history(pair_name, callback, count=120):
     api_url = "wss://ws.binaryws.com/websockets/v3?app_id=1089"
     try:
         async with websockets.connect(
@@ -56,6 +57,7 @@ async def process_message(message, return_type=None, call_back=None):
 
     try:
         if message_type == 'tick':
+            # print(fact)
             _id = fact['tick']['id']
             date = int(fact['tick']['epoch'])
             ask = float(fact['tick']['ask'])
@@ -112,8 +114,7 @@ async def process_message(message, return_type=None, call_back=None):
 
             # print(fact)
 
-            for candle in fact['candles']:
-                # print(candle)
+            for idx, candle in enumerate(fact['candles']):
                 candle_obj = Candle(
                     open_time=float(candle['epoch']),
                     epoch=float(candle['epoch']),
@@ -129,6 +130,7 @@ async def process_message(message, return_type=None, call_back=None):
                         return candle_obj
                     else:
                         await call_back(candle_obj)
+                        time.sleep(0.000001)
 
             # data['current'] = data['df'][-1]
             # print(data)
@@ -136,11 +138,9 @@ async def process_message(message, return_type=None, call_back=None):
             if return_type is None or return_type is type(data):
                 return data
         else:
-            # logging.info(fact)
             pass
 
-
-
     except Exception as e:
+        print(fact)
         ex, val, tb = sys.exc_info()
         traceback.print_exception(ex, val, tb)

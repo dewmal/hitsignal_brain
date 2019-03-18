@@ -1,0 +1,13 @@
+prediction_step = 3
+algo_max_window_size = 26
+window_size = 50
+DATA_LENGTH = 1000000
+BATCH_SIZE = 128
+N_STEPS = window_size
+N_INPUTS = 2
+N_NEURONS = 256
+N_OUTPUTS = 2
+N_EPHOCS = 100
+VALIDATION_SIZE = 0.2
+LOG_X = False
+consider_value = 'close'

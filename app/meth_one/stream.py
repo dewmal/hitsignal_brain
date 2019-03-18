@@ -19,7 +19,7 @@ class Candle(faust.Record, isodates=True):
     symbol: str
 
     def to_olhc_array(self):
-        return [self.open_time, self.open, self.low, self.high, self.close]  # OLHC
+        return [self.open_time, self.open, self.low, self.high, self.close, 0]  # OLHC
 
 
 class CandleWindow(faust.Record, isodates=True):

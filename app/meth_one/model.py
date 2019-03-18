@@ -1,7 +1,6 @@
 # Model your
 import torch
 import torch.nn as nn
-import torch.functional as F
 
 
 class LSTMPredictModel(nn.Module):
@@ -58,38 +57,33 @@ class StrategyModel(nn.Module):
         self.mcad_rnn = LSTMPredictModel(batch_size, n_steps, mcad_n_inputs, n_neurons, n_outputs * 10, device=device)
         self.l1 = nn.Linear(self.n_outputs * 10, self.n_outputs)
 
-        self.l_price = nn.Linear(self.price_n_inputs, n_outputs * 10)
-        self.l_price_activation = nn.LeakyReLU()
-        self.l_sma = nn.Linear(self.sma_n_inputs, n_outputs * 10)
-        self.l_sma_activation = nn.LeakyReLU()
-        self.l_mcad = nn.Linear(self.mcad_n_inputs, n_outputs * 10)
-        self.l_mcda_activation = nn.LeakyReLU()
-
     def forward(self, inputs):
-        price, sma_input, mcad_input = inputs[:, :, 0:1], inputs[:, :, 1:4], inputs[:, :, 4:6]
-        sma_input = sma_input
-        mcad_input = mcad_input
+        print(inputs.shape)
+        price = inputs[:, :, 0:1]
+        sma_input = inputs[:, :, 1:4]
+        mcad_input = inputs[:, :, 4:]
+        print(inputs.shape, price.shape, sma_input.shape, mcad_input.shape)
+        # print(inputs, price, sma_input, mcad_input)
 
         # print(sma_input.shape, mcad_input.shape)
         # print(sma_input,mcad_input)
-        # x_price, _x_price_lstm, _x_price_lstm_hidden = self.price_rnn(price)
-        # x_sma, _x_sma_lstm, _x_sma_lstm_hidden = self.sma_rnn(sma_input)
-        # x_mcad, _x_mcad_lstm, _x_macd_lstm_hidden = self.mcad_rnn(mcad_input)
-
-        x_price = self.l_price(price[:, -1, :])
-        x_price = self.l_price_activation(x_price)
-        x_sma = self.l_sma(sma_input[:, -1, :])
-        x_sma = self.l_sma_activation(x_sma)
-        x_mcad = self.l_mcad(mcad_input[:, -1, :])
-        x_mcad = self.l_mcda_activation(x_mcad)
-        #
+        x_price, _x_price_lstm, _ = self.price_rnn(price)
+        x_sma, _x_sma_lstm, _ = self.sma_rnn(sma_input)
+        x_mcad, _x_mcad_lstm, _ = self.mcad_rnn(mcad_input)
         # print(_x_price_lstm.shape, _x_sma_lstm.shape, _x_mcad_lstm.shape)
-        # print(_x_price_lstm_hidden[0].shape, _x_sma_lstm_hidden[0].shape, _x_macd_lstm_hidden[0].shape)
-        # print(_x_price_lstm_hidden[1].shape, _x_sma_lstm_hidden[1].shape, _x_macd_lstm_hidden[1].shape)
 
         x = (x_sma + x_mcad + x_price) / 3
         x = torch.tanh(x)
         # x = torch.sigmoid(x)
         x = self.l1(x)
-        # print(x.shape)
         return x
+
+
+def build_model(device, settings, model_path=None):
+    model = StrategyModel(settings.BATCH_SIZE, settings.N_STEPS, 1, 3, 2, settings.N_NEURONS,
+                          settings.N_OUTPUTS, device=device).to(device)
+
+    if model_path is not None:
+        model.load_state_dict(torch.load(model_path))
+
+    return model
