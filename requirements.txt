@@ -18,3 +18,4 @@ tqdm
 tensorboardX
 tensorboard
 tensorflow
+floyd-cli

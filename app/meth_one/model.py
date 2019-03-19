@@ -109,7 +109,19 @@ class StrategyModel(nn.Module):
         self.mcad_cnn = CNNForDetect(mcad_n_inputs, n_outputs * 10, window_size=n_steps)
 
         self.l_price_sma = nn.Linear(self.n_outputs * 10, self.n_outputs)
-        self.l1 = nn.Linear(self.n_outputs * 10, self.n_outputs)
+
+        self.bl1 = nn.Bilinear(self.n_outputs * 10, self.n_outputs * 10, self.n_outputs * 10)
+        self.bl2 = nn.Bilinear(self.n_outputs * 10, self.n_outputs * 10, self.n_outputs * 10)
+        self.bl3 = nn.Bilinear(self.n_outputs * 10, self.n_outputs * 10, self.n_outputs * 10)
+        self.bl4 = nn.Bilinear(self.n_outputs * 10, self.n_outputs * 10, self.n_outputs * 10)
+
+        self.ln1 = nn.LayerNorm(self.n_outputs * 10, eps=0.00025)
+
+        self.l1 = nn.Linear(self.n_outputs * 10, self.n_outputs * 5)
+        self.l1_2 = nn.Linear(self.n_outputs * 10, self.n_outputs)
+        self.l2 = nn.Linear(self.n_outputs * 5, self.n_outputs * 3)
+        self.l3 = nn.Linear(self.n_outputs * 3, self.n_outputs * 2)
+        self.l4 = nn.Linear(self.n_outputs * 2, self.n_outputs)
 
     def forward(self, inputs):
         # print(inputs.shape)
@@ -124,26 +136,34 @@ class StrategyModel(nn.Module):
         x_mcad_cnn = self.mcad_cnn(
             torch.reshape(mcad_input, (mcad_input.shape[0], mcad_input.shape[2], mcad_input.shape[1])))
 
+        # x_price_cnn = self.ln1(x_price_cnn)
+
         # LSTM Output
         x_price, _x_price_lstm, _ = self.price_rnn(price)
         x_sma, _x_sma_lstm, _ = self.sma_rnn(sma_input)
         x_mcad, _x_mcad_lstm, _ = self.mcad_rnn(mcad_input)
 
-        price_x = torch.add(x_price_cnn, 1, x_price)
-        sma_x = torch.add(x_price_cnn, 1, x_price)
-        mcad_x = torch.add(x_price_cnn, 1, x_price)
+        price_x = self.bl1(x_price_cnn, x_price)  # torch.add(x_price_cnn, 1, x_price)
+        sma_x = self.bl1(x_sma_cnn, x_sma)  # torch.add(x_price_cnn, 1, x_price)
+        mcad_x = self.bl1(x_mcad_cnn, x_mcad)  # torch.add(x_price_cnn, 1, x_price)
 
-        sma_x = torch.addcmul(sma_x, 0.5, mcad_x, sma_x)
+        # sma_x = torch.addcmul(sma_x, 0.5, mcad_x, sma_x)
 
         x = price_x + sma_x
 
         price_x = self.l_price_sma(x)
 
         x = torch.add(price_x, 0.01, mcad_x)
+        x = self.ln1(x)
+        x1 = torch.sigmoid(self.l1((x)))
+        x11 = self.l1_2(x)
 
-        x = torch.sigmoid(self.l1((x)))
+        x2 = torch.sigmoid(self.l2((x1)))
+        x3 = torch.sigmoid(self.l3((x2)))
+        x3 = x3 + x11 / 2
+        x4 = torch.sigmoid(self.l4((x3)))
         # print(x.shape)
-        return x
+        return x4
 
 
 def build_model(device, settings, load_from_file=True):
@@ -156,4 +176,5 @@ def build_model(device, settings, load_from_file=True):
         # print(chkpt)
         # model.load_state_dict()
     model = model.to(device)
+    print(model)
     return model

@@ -4,6 +4,8 @@ from ignite.engine import Events, Engine
 from ignite.handlers import ModelCheckpoint
 from ignite.metrics import MeanSquaredError, Loss
 from tensorboardX import SummaryWriter
+from torch.optim import lr_scheduler
+from torch.optim.lr_scheduler import LambdaLR
 from torch.utils.data import DataLoader
 
 import settings
@@ -41,7 +43,7 @@ import torch.nn as nn
 import torch.optim as optim
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-device = 'cpu'
+# device = 'cpu'
 print(device)
 
 data_frame = prepare_data_set(_data_frame=df, window_size=meth_settings.window_size,
@@ -63,6 +65,10 @@ val_data_loader = DataLoader(_dataset_val, batch_size=meth_settings.BATCH_SIZE)
 train_model = build_model(device, meth_settings, load_from_file=False)
 criterion = nn.MSELoss()
 optimizer = optim.Adam(train_model.parameters(), lr=0.001)
+
+lambda1 = lambda epoch: epoch // 30
+lambda2 = lambda epoch: 0.95 ** epoch
+scheduler = lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.1)
 
 if meth_settings.LOG_X:
     def create_summary_writer(model, data_loader, log_dir):
@@ -117,7 +123,7 @@ loss_metric = Loss(loss_fn=criterion)
 loss_metric.attach(evaluator, "nll")
 
 max_epochs = meth_settings.N_EPHOCS
-validate_every = 1
+validate_every = 50
 checkpoint_every = 10
 
 if meth_settings.LOG_X:
@@ -139,6 +145,7 @@ def validate(trainer):
 
 @trainer.on(Events.EPOCH_COMPLETED)
 def log_training_results(engine):
+    scheduler.step()
     evaluator.run(train_data_loader)
     metrics = evaluator.state.metrics
     avg_accuracy = metrics['mse']
@@ -154,16 +161,16 @@ def log_training_results(engine):
 def log_validation_results(engine):
     evaluator.run(val_data_loader)
     metrics = evaluator.state.metrics
-    avg_accuracy = metrics['accuracy']
+    avg_accuracy = metrics['mse']
     avg_nll = metrics['nll']
-    print("Validation Results - Epoch: {}  Avg accuracy: {:.2f} Avg loss: {:.2f}"
+    print("Validation Results - Epoch: {}  Avg accuracy: {:.10f} Avg loss: {:.10f}"
           .format(engine.state.epoch, avg_accuracy, avg_nll))
     if meth_settings.LOG_X:
         writer.add_scalar("valdation/avg_loss", avg_nll, engine.state.epoch)
         writer.add_scalar("valdation/avg_accuracy", avg_accuracy, engine.state.epoch)
 
 
-check_pointer = ModelCheckpoint(f"{settings.MODEL_FOLDER}/meht_one_algo_one/", "model_1",
+check_pointer = ModelCheckpoint(f"{settings.MODEL_FOLDER}/meht_one_algo_one/", "model_2",
                                 save_interval=checkpoint_every,
                                 create_dir=True, require_empty=False
                                 )

@@ -1,14 +1,21 @@
-prediction_step = 3
+prediction_step = 5
 algo_max_window_size = 26
-window_size = 50
+window_size = 20
 DATA_LENGTH = 1000000
-BATCH_SIZE = 128
+BATCH_SIZE = 256
 N_STEPS = window_size
 N_INPUTS = 2
-N_NEURONS = 256
+N_NEURONS = 64
 N_OUTPUTS = 1
-N_EPHOCS = 100
+N_EPHOCS = 1000
 VALIDATION_SIZE = 0.2
 LOG_X = False
 consider_value = 'close'
-model_path = '/home/dewmal/WorkingProjects/CeylonAPPS/brain/hitsignal_brain/models/meht_one_algo_one/model_1_mymodel_60.pth'
+model_path = '/home/dewmal/WorkingProjects/CeylonAPPS/brain/hitsignal_brain/models/model_2_mymodel_310.pth'
+# Model
+macd_1 = 12
+macd_2 = 9
+macd_3 = 26
+sma_1 = 7
+sma_2 = 14
+sma_3 = 23

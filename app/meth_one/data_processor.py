@@ -20,10 +20,10 @@ def prepare_data_set(_data_frame, algo_max_window_size=None, window_size=None, c
     data_frame = pd.DataFrame()
     data_frame[consider_value] = _data_frame[consider_value]
 
-    data_frame = create_panda_data_frame_2min_ready(df=data_frame, value_name=consider_value, sma_1=6, sma_2=14,
-                                                    sma_3=26,
-                                                    macd_1=12,
-                                                    macd_2=26, macd_3=9,
+    data_frame = create_panda_data_frame_2min_ready(df=data_frame, value_name=consider_value, sma_1=settings.sma_1, sma_2=settings.sma_2,
+                                                    sma_3=settings.sma_3,
+                                                    macd_1=settings.macd_1,
+                                                    macd_2=settings.macd_2, macd_3=settings.macd_3,
                                                     )
     if train:
         data_frame['prediction'] = data_frame[consider_value].shift(-prediction_step)

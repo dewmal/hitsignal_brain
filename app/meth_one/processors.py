@@ -56,7 +56,7 @@ async def fx_candle_stream_prediction_(candles):
         time=index,
         price=float(prediction[0][0]),
         symbol=candle.symbol,
-        price_change=float(prediction[0][1]),
+        price_change=float(prediction[0][0]),
         originator="aimodel",
         origin_time=candle.epoch
     )
